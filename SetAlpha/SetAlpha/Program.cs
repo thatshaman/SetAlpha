@@ -32,9 +32,9 @@ if (args.Length > 0)
 {
     foreach (string item in args)
     {
-        if (File.Exists(args[0]) && Path.GetExtension(args[0]).ToLower() == ".png")
+        if (File.Exists(item) && Path.GetExtension(item).ToLower() == ".png")
         {
-            SplitAlpha(args[0]);
+            SplitAlpha(item);
         }
     }
 }
@@ -45,17 +45,19 @@ else
     Console.WriteLine("\tMerge:\tSetAlpha \"file_color.png\" \"file_alpha.png\"");
 }
 
+
 void SplitAlpha(string input)
 {
-    Bitmap source = new Bitmap(input, true);
+    Console.WriteLine("Split: " + input);
+    Bitmap source = new(input, true);
     if (source.PixelFormat != PixelFormat.Format32bppArgb)
     {
         Console.WriteLine("PNG needs to be 32bppArgb");
         return;
     }
 
-    Bitmap color = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb);
-    Bitmap alpha = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb);
+    Bitmap color = new(source.Width, source.Height, PixelFormat.Format32bppArgb);
+    Bitmap alpha = new(source.Width, source.Height, PixelFormat.Format32bppArgb);
 
     BitmapData sourceData = source.LockBits(new Rectangle(0, 0, source.Width, source.Height), ImageLockMode.ReadWrite, source.PixelFormat);
     BitmapData colorData = color.LockBits(new Rectangle(0, 0, color.Width, color.Height), ImageLockMode.ReadWrite, source.PixelFormat);
@@ -74,17 +76,12 @@ void SplitAlpha(string input)
 
             for (int x = 0; x < sourceData.Width; x++)
             {
-                byte r = rowSource[x * pixelsize + 0];
-                byte g = rowSource[x * pixelsize + 1];
-                byte b = rowSource[x * pixelsize + 2];
-                byte a = rowSource[x * pixelsize + 3];
-
-
-                rowColor[x * pixelsize + 0] = r;
-                rowColor[x * pixelsize + 1] = g;
-                rowColor[x * pixelsize + 2] = b;
+                rowColor[x * pixelsize + 0] = rowSource[x * pixelsize + 0];
+                rowColor[x * pixelsize + 1] = rowSource[x * pixelsize + 1];
+                rowColor[x * pixelsize + 2] = rowSource[x * pixelsize + 2];
                 rowColor[x * pixelsize + 3] = 255;
 
+                byte a = rowSource[x * pixelsize + 3];
                 rowAlpha[x * pixelsize + 0] = a;
                 rowAlpha[x * pixelsize + 1] = a;
                 rowAlpha[x * pixelsize + 2] = a;
@@ -108,22 +105,23 @@ void SplitAlpha(string input)
 
 void MergeAlpha(string colorFile, string alphaFile)
 {
+    Console.WriteLine("Merge: " + colorFile + ", " + alphaFile);
 
-    Bitmap color = new Bitmap(colorFile, true);
+    Bitmap color = new(colorFile, true);
     if (color.PixelFormat != PixelFormat.Format32bppArgb)
     {
         Console.WriteLine("PNG needs to be 32bppArgb");
         return;
     }
 
-    Bitmap alpha = new Bitmap(alphaFile, true);
+    Bitmap alpha = new(alphaFile, true);
     if (alpha.PixelFormat != PixelFormat.Format32bppArgb)
     {
         Console.WriteLine("PNG needs to be 32bppArgb");
         return;
     }
 
-    Bitmap output = new Bitmap(color.Width, color.Height, PixelFormat.Format32bppArgb);
+    Bitmap output = new(color.Width, color.Height, PixelFormat.Format32bppArgb);
 
     BitmapData outputData = output.LockBits(new Rectangle(0, 0, output.Width, output.Height), ImageLockMode.ReadWrite, output.PixelFormat);
     BitmapData colorData = color.LockBits(new Rectangle(0, 0, color.Width, color.Height), ImageLockMode.ReadWrite, color.PixelFormat);
@@ -141,16 +139,10 @@ void MergeAlpha(string colorFile, string alphaFile)
 
             for (int x = 0; x < outputData.Width; x++)
             {
-                byte r = rowColor[x * pixelsize + 0];
-                byte g = rowColor[x * pixelsize + 1];
-                byte b = rowColor[x * pixelsize + 2];
-                byte a = rowAlpha[x * pixelsize + 0];
-
-
-                rowOutput[x * pixelsize + 0] = r;
-                rowOutput[x * pixelsize + 1] = g;
-                rowOutput[x * pixelsize + 2] = b;
-                rowOutput[x * pixelsize + 3] = a;
+                rowOutput[x * pixelsize + 0] = rowColor[x * pixelsize + 0];
+                rowOutput[x * pixelsize + 1] = rowColor[x * pixelsize + 1];
+                rowOutput[x * pixelsize + 2] = rowColor[x * pixelsize + 2];
+                rowOutput[x * pixelsize + 3] = rowAlpha[x * pixelsize + 0];
             }
         }
     }
